@@ -59,4 +59,4 @@ class CandidateMatcher:
         if cls.name_match(candidate1, candidate2):
             return True, "Matched by Full Name"
 
-        return False, "No Match"
+        return False, "No Match Found"
