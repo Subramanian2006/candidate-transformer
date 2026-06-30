@@ -32,6 +32,8 @@ class SkillNormalizer:
         normalized = []
 
         for skill in skills:
+            if not isinstance(skill, str):
+                continue
 
             key = skill.strip().lower()
 
