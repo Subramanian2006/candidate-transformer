@@ -11,7 +11,7 @@ from merger.candidate_merger import CandidateMerger
 
 from projector.projector import Projector
 from validator.schema_validator import SchemaValidator
-
+#python cli.py --csv input/recruiter.csv --resume input/resume.pdf --config config/custom.json
 
 def main():
 
@@ -47,49 +47,70 @@ def main():
 
     # ---------- CSV ----------
 
-    csv_candidate = CSVReader(args.csv).read()[0]
+    csv_records = CSVReader(args.csv).read()
 
-    csv_candidate = CandidateNormalizer.normalize(
-        csv_candidate
-    )
-
-    csv_candidate["source"] = "csv"
-
+    if csv_records:
+        csv_candidate = CandidateNormalizer.normalize(csv_records[0])
+        csv_candidate["source"] = "csv"
+    else:
+        print("[Warning] CSV could not be loaded.")
+        csv_candidate = {}
     # ---------- Resume ----------
 
-    resume_text = ResumeReader(
-        args.resume
-    ).read()
+    resume_text = ResumeReader(args.resume).read()
 
-    resume_candidate = ResumeParser(
-        resume_text
-    ).parse()
-
-    resume_candidate = CandidateNormalizer.normalize(
-        resume_candidate
-    )
-
-    resume_candidate["source"] = "resume"
+    if resume_text:
+        resume_candidate = ResumeParser(resume_text).parse()
+        resume_candidate = CandidateNormalizer.normalize(resume_candidate)
+        resume_candidate["source"] = "resume"
+    else:
+        print("[Warning] Resume could not be loaded.")
+        resume_candidate = {}
 
     # ---------- Matching ----------
 
-    matched, reason = CandidateMatcher.match(
-        csv_candidate,
-        resume_candidate
-    )
-
-    if not matched:
-        print("Candidates do not match.")
-        print("Reason:", reason)
+    # Case 1: Neither source available
+    if not csv_candidate and not resume_candidate:
+        print("No valid candidate sources found.")
         return
 
-    # ---------- Merge ----------
+    # Case 2: Only CSV available
+    elif csv_candidate and not resume_candidate:
+        print("\nOnly CSV source available. Building profile from CSV.")
+        merged_candidate = CandidateMerger.merge(
+            csv_candidate,
+            {}
+        )
 
-    merged_candidate = CandidateMerger.merge(
-        csv_candidate,
-        resume_candidate
-    )
+    # Case 3: Only Resume available
+    elif resume_candidate and not csv_candidate:
+        print("\nOnly Resume source available. Building profile from Resume.")
+        merged_candidate = CandidateMerger.merge(
+            {},
+            resume_candidate
+        )
 
+    # Case 4: Both sources available
+    else:
+
+        print("\n===== Candidate Matching =====")
+
+        matched, reason = CandidateMatcher.match(
+            csv_candidate,
+            resume_candidate
+        )
+
+        print("Matched :", matched)
+        print("Reason  :", reason)
+
+        if not matched:
+            print("Candidates do not match.")
+            return
+
+        merged_candidate = CandidateMerger.merge(
+            csv_candidate,
+            resume_candidate
+        )
     # ---------- Projection ----------
 
     output = Projector.project(
