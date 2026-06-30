@@ -1,0 +1,37 @@
+    {
+    "fields": [
+        {
+            "path": "candidate_id",
+            "type": "string",
+            "required": true
+        },
+        {
+            "path": "full_name",
+            "type": "string",
+            "required": true
+        },
+        {
+            "path": "emails",
+            "type": "string[]"
+        },
+        {
+            "path": "phones",
+            "type": "string[]"
+        },
+        {
+            "path": "current_company",
+            "type": "string"
+        },
+        {
+            "path": "title",
+            "type": "string"
+        },
+        {
+            "path": "skills",
+            "type": "string[]"
+        }
+    ],
+    "include_confidence": true,
+    "include_provenance": true,
+    "on_missing": "null"
+}
